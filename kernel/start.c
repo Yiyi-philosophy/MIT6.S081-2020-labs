@@ -9,6 +9,7 @@ void timerinit();
 
 // entry.S needs one stack per CPU.
 __attribute__ ((aligned (16))) char stack0[4096 * NCPU];
+//
 
 // scratch area for timer interrupt, one per CPU.
 uint64 mscratch0[NCPU * 32];
@@ -18,13 +19,14 @@ extern void timervec();
 
 // entry.S jumps here in machine mode on stack0.
 void
-start()
+start() // After entry.S
 {
   // set M Previous Privilege mode to Supervisor, for mret.
   unsigned long x = r_mstatus();
   x &= ~MSTATUS_MPP_MASK;
   x |= MSTATUS_MPP_S;
   w_mstatus(x);
+  // Pre: machine level -> supervisor level
 
   // set M Exception Program Counter to main, for mret.
   // requires gcc -mcmodel=medany
@@ -46,7 +48,7 @@ start()
   w_tp(id);
 
   // switch to supervisor mode and jump to main().
-  asm volatile("mret");
+  asm volatile("mret"); //--> OS start
 }
 
 // set up to receive timer interrupts in machine mode,
@@ -54,7 +56,9 @@ start()
 // which turns them into software interrupts for
 // devintr() in trap.c.
 void
-timerinit()
+timerinit() 
+// reg: mtime     5 - 6 --- 10 : timer interrupt -> 0 by os
+//      mtimecmp  10        10
 {
   // each CPU has a separate source of timer interrupts.
   int id = r_mhartid();

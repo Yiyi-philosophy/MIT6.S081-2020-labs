@@ -10,8 +10,9 @@ volatile static int started = 0;
 void
 main()
 {
-  if(cpuid() == 0){
+  if(cpuid() == 0){ // CPU0 exec
     consoleinit();
+    // device register function
     printfinit();
     printf("\n");
     printf("xv6 kernel is booting\n");
@@ -19,6 +20,7 @@ main()
     kinit();         // physical page allocator
     kvminit();       // create kernel page table
     kvminithart();   // turn on paging
+    // Paging start ! 
     procinit();      // process table
     trapinit();      // trap vectors
     trapinithart();  // install kernel trap vector
@@ -32,7 +34,7 @@ main()
     __sync_synchronize();
     started = 1;
   } else {
-    while(started == 0)
+    while(started == 0) // Spin
       ;
     __sync_synchronize();
     printf("hart %d starting\n", cpuid());
